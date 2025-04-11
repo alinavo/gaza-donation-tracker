@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gaza Donation Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white font-sans">
+  <div class="max-w-3xl mx-auto py-10 px-4">
+    <h1 class="text-3xl font-bold text-center text-white mb-6">🇵🇸 Gaza Donation Tracker</h1>
+    <div class="bg-green-600 text-white text-xl font-semibold rounded-xl p-4 text-center mb-8 shadow-lg">
+      Total Raised: <span id="totalRaised">Loading...</span>
+    </div>
+
+    <div id="donationList" class="space-y-4"></div>
+  </div>
+
+  <script>
+    const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRMzFV9S3pgadgcj63QrgHdeW_fY4BzEuzBrs9Poe1lp0dKUKTukujFtM9z8xtvTD95oA7CBAfTszGj/pub?output=csv';
+
+    async function fetchDonations() {
+      const response = await axios.get(sheetURL);
+      const rows = response.data.split("\n").slice(1); // skip header
+      let total = 0;
+      let html = '';
+
+      rows.forEach(row => {
+        const [name, amount, date, message, currency, link] = row.split(',');
+        if (!amount) return;
+        total += parseFloat(amount);
+
+        html += `
+          <div class="bg-white text-black p-4 rounded-xl shadow">
+            <div class="flex justify-between items-center">
+              <span class="font-bold">${name || 'Anonymous'}</span>
+              <span>${parseFloat(amount).toFixed(2)} ${currency || ''}</span>
+            </div>
+            <div class="text-sm text-gray-700">${message || ''}</div>
+            <div class="text-xs text-gray-500 mt-1">${date}</div>
+            ${link ? `<a href="${link}" target="_blank" class="text-xs text-blue-600 underline">View Txn</a>` : ''}
+          </div>
+        `;
+      });
+
+      document.getElementById('totalRaised').textContent = `$${total.toFixed(2)}`;
+      document.getElementById('donationList').innerHTML = html;
+    }
+
+    fetchDonations();
+  </script>
+</body>
+</html>
